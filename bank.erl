@@ -100,5 +100,6 @@ withdraw(Bank, Owner, Type, Amount) ->
 % Uses lists:filter but because {Owner,Type} is the primary key only one account
 % should ever be returned. Returned in a tuple
 select_account(Bank, Owner, Type) ->
-    Find = fun(A) -> A#account.owner == Owner, A#account.type == Type end,
+    Find =  fun(A) when A#account.owner == Owner, A#account.type == Type ->
+                true end,
     lists:filter(Find, Bank).
