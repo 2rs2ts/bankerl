@@ -38,6 +38,7 @@ Each function returns a tuple of one of the following three forms.
 * __bank:balance(Bank, Owner, Type)__
 	* If the _Owner_ has an account of the given _Type_, returns __{ok, Balance}__.
 	* If not, returns __{error, "No such account"}__.
+
 ### Operations
 
 * __bank:open(Bank, Owner, Type)__
