@@ -2,61 +2,54 @@
 %% Andrew Garrett
 -module(bank).
 
-%% A bank account under the ownership of an owner with name 'name', of type 'type',
-%% and a balance 'balance'.
--record(account, {  name :: atom(),
+%% A bank account under the ownership of an owner with owner 'owner', of type
+%% 'type', and a balance 'balance'.
+-record(account, {  owner :: atom(),
                     type :: atom(),
                     balance = 0 :: non_neg_integer()  }).
 
 %% size/1
 %% Return the number of accounts in the Bank: {ok, Size}
-size(Bank) -> {ok, erlang:length(Bank)}.
+size(Bank) ->
+    {ok, erlang:length(Bank)}.
 
 %% accounts/2
 %% Return the account types associated with a particular owner: {ok, TypeList}
 accounts(Bank, Owner) ->
-	FindType = fun(A) when A#account.name == Owner -> A#account.type end,
-	{ok, lists:map(FindType, Bank)}.
+    TypeList = [A#account.type || A#account <- Bank, A#account.owner == Owner],
+    {ok, TypeList}.
 
 %% balance/3
 %% Return the balance in a particular owner's account of a particular type:
 %% {ok, Balance}
-% could use lists:keyfind
-balance(Bank, Owner, Type) -> 
-	FindBal = fun(A) when A#account.name == Owner, A#account.type == Type ->
-		A#account.balance end,
-	{Balance} = lists:map(FindBal, Bank),
-	{ok, Balance}.
-
+balance(Bank, Owner, Type) ->
+    {Account} = select_account(Bank, Owner, Type),
+    {ok, Account#account.balance}.
 
 %% open/3
 %% Create a new account of a specified type for a specified owner.
 %% If the owner does not have an account of this type: {ok, NewBank}
 %% If the owner already has an account of this type: {error, "Duplicate account"}
-% need to find both owner and type
-%open(Bank, Owner, Type) when lists:keyfind(Owner, #account.name, Bank) ->
-%	{error, "Duplicate account"};
-%open(Bank, Owner, Type) ->
-%	NewAccount = #account(name = Owner, type = Type),
-%	{ok, lists:keystore(Owner, #account.name, Bank, NewAccount}.	
-
 open(Bank, Owner, Type) ->
-	Find = fun(A) when A#account.name == Owner, A#account.type == Type -> A end,
-	case lists:any(Find, Bank) of
-		true -> {error, "Duplicate account"};
-		false -> {ok, [#account(name = Owner, type = Type) | Bank]}
-	end.
-
+    case select_account(Bank, Owner, Type) of
+        [] ->
+            {ok, [#account(name = Owner, type = Type) | Bank]};
+        {Account} ->
+            {error, "Duplicate account"}
+    end.
+    
 
 %% close/3
 %% Close a specified owner's account of a specified type.
 %% If the owner had an account of this type: {ok, {NewBank, ClosingBalance}}
 %% If the owner did not have an account of this type: {error, "No such account"}
 close(Bank, Owner, Type) ->
-	Find = fun(A) when A#account.name == Owner, A#account.type == Type -> A end,
-	{Account} = lists:map(Find, Bank},
-	lists:delete(Account, Bank).
-
+    case select_account(Bank, Owner, Type) of
+        [] ->
+            {error, "No such account"};
+        {Account} ->
+            {ok, {lists:delete(Account, Bank), Account#account.balance}}
+    end.
 
 %% deposit/4
 %% Deposit a specified amount of funds in a specified owner's account of a specified
@@ -67,9 +60,14 @@ close(Bank, Owner, Type) ->
 deposit(_Bank, _Owner, _Type, Amount) when Amount < 0 ->
 	{error, "Negative amount"};
 deposit(Bank, Owner, Type, Amount) ->
-% can't use keystore b/c appending, only nth value
-	Find = fun(A) when A#account.name == Owner, A#account.type == Type -> A end,
-	
+    case select_account(Bank, Owner, Type) of
+        [] ->
+            {error, "No such account"};
+        {Account} ->
+            DepositFun = fun(A :: #account) when A == Account ->
+                    A#account.balance + Amount end,
+            {ok, lists:map(DepositFun, Bank)}
+    end.
 
 
 %% withdraw/4
@@ -84,3 +82,19 @@ deposit(Bank, Owner, Type, Amount) ->
 withdraw(_Bank, _Owner, _Type, Amount) when Amount < 0 ->
 	{error, "Negative amount"};
 withdraw(Bank, Owner, Type, Amount) ->
+    case select_account(Bank, Owner, Type) of
+        [] ->
+            {error, "No such account"};
+            
+    end.
+        
+
+%% select_account/3
+%% Select the account of specified Owner and Type.
+% Uses lists:filter but because {Owner,Type} is the primary key only one account
+% should ever be returned. Returned in a tuple
+select_account(Bank, Owner, Type) ->
+    Find =  fun(A :: #account) ->
+                A#account.owner == Owner,
+                A#account.type == Type end,
+    lists:filter(Find, Bank).
