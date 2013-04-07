@@ -12,7 +12,7 @@
 
 %% size/1
 %% Return the number of accounts in the Bank: {ok, Size}
-size(Bank) -> erlang:length(Bank).
+size(Bank) -> {ok, erlang:length(Bank)}.
 
 %% accounts/2
 %% Return the account types associated with a particular owner: {ok, TypeList}
