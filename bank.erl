@@ -73,7 +73,6 @@ deposit(Bank, Owner, Type, Amount) ->
                                     A#account{balance = Account#account.balance + Amount};
                                 (A) -> A end,
             {ok, lists:map(DepositFun, Bank)}
-            %lists:keyreplace(Account, 0, Bank, Account#account{balance = Account#account.balance + Amount})
     end.
 
 %% withdraw/4
