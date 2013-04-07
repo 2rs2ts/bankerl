@@ -40,7 +40,7 @@ open(Bank, Owner, Type) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {ok, [#account{owner = Owner, type = Type} | Bank]};
-        [_] ->
+        [_Account] ->
             {error, "Duplicate account"}
     end.
 
