@@ -28,7 +28,7 @@ balance(Bank, Owner, Type) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {error, "No such account"};
-        {Account} ->
+        [Account] ->
             {ok, Account#account.balance}
     end.
 
@@ -40,7 +40,7 @@ open(Bank, Owner, Type) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {ok, [#account{owner = Owner, type = Type} | Bank]};
-        {_} ->
+        [_] ->
             {error, "Duplicate account"}
     end.
 
@@ -52,7 +52,7 @@ close(Bank, Owner, Type) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {error, "No such account"};
-        {Account} ->
+        [Account] ->
             {ok, {lists:delete(Account, Bank), Account#account.balance}}
     end.
 
@@ -68,7 +68,7 @@ deposit(Bank, Owner, Type, Amount) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {error, "No such account"};
-        {Account} ->
+        [Account] ->
             DepositFun =    fun(A) when A == Account ->
                                 A#account.balance + Amount end,
             {ok, lists:map(DepositFun, Bank)}
@@ -89,7 +89,7 @@ withdraw(Bank, Owner, Type, Amount) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {error, "No such account"};
-        {Account} ->
+        [Account] ->
             if  Account#account.balance - Amount < 0 ->
                     {error, "Overdrawn"};
                 Account#account.balance - Amount >= 0 ->
