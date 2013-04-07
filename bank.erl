@@ -8,8 +8,6 @@
                     type :: atom(),
                     balance = 0 :: non_neg_integer()  }).
 
-%% maybe use an orddict
-
 %% size/1
 %% Return the number of accounts in the Bank: {ok, Size}
 size(Bank) -> {ok, erlang:length(Bank)}.
