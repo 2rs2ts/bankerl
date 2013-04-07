@@ -102,8 +102,9 @@ withdraw(Bank, Owner, Type, Amount) ->
 
 %% select_account/3
 %% Select the account of specified Owner and Type.
-% Uses lists:filter but because {Owner,Type} is the primary key only one account
-% should ever be returned. Returned in a tuple
+%% Uses lists:filter but because {Owner,Type} is the primary key only one account
+%% should ever be returned: the exception would be if you were to use an
+%% anonymous variable. Result returned in a tuple to help pattern matching.
 select_account(Bank, Owner, Type) ->
     Find =  fun(A) ->
                 (A#account.owner == Owner) andalso (A#account.type == Type) end,
