@@ -37,7 +37,8 @@ balance(Bank, Owner, Type) ->
 %% open/3
 %% Create a new account of a specified type for a specified owner.
 %% If the owner does not have an account of this type: {ok, NewBank}
-%% If the owner already has an account of this type: {error, "Duplicate account"}
+%% If the owner already has an account of this type:
+%% {error, "Duplicate account"}
 open(Bank, Owner, Type) ->
     case select_account(Bank, Owner, Type) of
         [] ->
@@ -59,10 +60,11 @@ close(Bank, Owner, Type) ->
     end.
 
 %% deposit/4
-%% Deposit a specified amount of funds in a specified owner's account of a specified
-%% type.
+%% Deposit a specified amount of funds in a specified owner's account of a
+%% specified type.
 %% If the owner has an account of this type: {ok, NewBank}
-%% If the owner does not have an account of this type: {error, "No such account"}
+%% If the owner does not have an account of this type:
+%% {error, "No such account"}
 %% If the specified amount is not positive: {error, "Negative amount"}
 deposit(_Bank, _Owner, _Type, Amount) when Amount < 0 ->
 	{error, "Negative amount"};
@@ -85,7 +87,8 @@ deposit(Bank, Owner, Type, Amount) ->
 %% withdraw: {ok, NewBank}
 %% If the owner has an account of this type but there are insufficient funds to
 %% withdraw: {error, "Overdrawn"}
-%% If the owner does not have an account of this type: {error, "No such account"}
+%% If the owner does not have an account of this type:
+%% {error, "No such account"}
 %% If the specified amount is not positive: {error, "Negative amount"}
 withdraw(_Bank, _Owner, _Type, Amount) when Amount < 0 ->
 	{error, "Negative amount"};
@@ -107,8 +110,8 @@ withdraw(Bank, Owner, Type, Amount) ->
 
 %% select_account/3
 %% Select the account of specified Owner and Type.
-%% Uses lists:filter but because {Owner,Type} is the primary key only one account
-%% should ever be returned: the exception would be if you were to use an
+%% Uses lists:filter but because {Owner,Type} is the primary key, only one
+%% account should ever be returned: the exception would be if you were to use an
 %% anonymous variable. Result returned in a tuple to help pattern matching.
 select_account(Bank, Owner, Type) ->
     Find =  fun(A) ->
