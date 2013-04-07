@@ -69,9 +69,11 @@ deposit(Bank, Owner, Type, Amount) ->
         [] ->
             {error, "No such account"};
         [Account] ->
-            DepositFun =    fun(A) when A == Account ->
-                                A#account.balance + Amount end,
+            DepositFun = fun    (A) when A == Account ->
+                                    A#account{balance = Account#account.balance + Amount};
+                                (A) -> A end,
             {ok, lists:map(DepositFun, Bank)}
+            %lists:keyreplace(Account, 0, Bank, Account#account{balance = Account#account.balance + Amount})
     end.
 
 %% withdraw/4
