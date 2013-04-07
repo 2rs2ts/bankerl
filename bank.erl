@@ -25,8 +25,12 @@ accounts(Bank, Owner) ->
 %% Return the balance in a particular owner's account of a particular type:
 %% {ok, Balance}
 balance(Bank, Owner, Type) ->
-    {Account} = select_account(Bank, Owner, Type),
-    {ok, Account#account.balance}.
+    case select_account(Bank, Owner, Type) of
+        [] ->
+            {error, "No such account"};
+        {Account} ->
+            {ok, Account#account.balance}
+    end.
 
 %% open/3
 %% Create a new account of a specified type for a specified owner.
