@@ -1,6 +1,8 @@
 %% A banking module which stores accounts and can perform transactions.
 %% Andrew Garrett
 -module(bank).
+-export([   size/1, accounts/2, balance/3,
+            open/3, close/3, deposit/4, withdraw/4  ]).
 
 %% A bank account under the ownership of an owner with owner 'owner', of type
 %% 'type', and a balance 'balance'.
@@ -37,7 +39,6 @@ open(Bank, Owner, Type) ->
         {Account} ->
             {error, "Duplicate account"}
     end.
-    
 
 %% close/3
 %% Close a specified owner's account of a specified type.
@@ -69,7 +70,6 @@ deposit(Bank, Owner, Type, Amount) ->
             {ok, lists:map(DepositFun, Bank)}
     end.
 
-
 %% withdraw/4
 %% Withdraw a specified amount of funds from a specified owner's account of a
 %% specified type.
@@ -85,9 +85,14 @@ withdraw(Bank, Owner, Type, Amount) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {error, "No such account"};
-            
+        {Account} ->
+            if  Account#account.balance - Amount < 0 ->
+                    {error, "Overdrawn"};
+                Account#account.balance - Amount >= 0 ->
+                    DepositFun = fun(A :: #account) when A == Account ->
+                        A#account.balance - Amount end,
+                    {ok, lists:map(DepositFun, Bank)}
     end.
-        
 
 %% select_account/3
 %% Select the account of specified Owner and Type.
