@@ -6,9 +6,11 @@
 
 %% A bank account under the ownership of an owner with owner 'owner', of type
 %% 'type', and a balance 'balance'.
--record(account, {  owner :: atom(),
-                    type :: atom(),
-                    balance = 0 :: non_neg_integer()  }).
+-record(account,
+        { owner :: atom()
+        , type :: atom()
+        , balance = 0 :: non_neg_integer()
+        }).
 
 %% size/1
 %% Return the number of accounts in the Bank: {ok, Size}
@@ -69,9 +71,10 @@ deposit(Bank, Owner, Type, Amount) ->
         [] ->
             {error, "No such account"};
         [Account] ->
-            DepositFun = fun    (A) when A == Account ->
-                                    A#account{balance = Account#account.balance + Amount};
-                                (A) -> A end,
+            DepositFun = fun
+                (A) when A == Account ->
+                    A#account{balance = A#account.balance + Amount};
+                (A) -> A end,
             {ok, lists:map(DepositFun, Bank)}
     end.
 
@@ -94,9 +97,11 @@ withdraw(Bank, Owner, Type, Amount) ->
             if  Account#account.balance - Amount < 0 ->
                     {error, "Overdrawn"};
                 Account#account.balance - Amount >= 0 ->
-                    DepositFun =    fun(A) when A == Account ->
-                                        A#account.balance - Amount end,
-                    {ok, lists:map(DepositFun, Bank)}
+                    WithdrawFun = fun
+                        (A) when A == Account ->
+                            A#account{balance = A#account.balance - Amount};
+                        (A) -> A end,
+                    {ok, lists:map(WithdrawFun, Bank)}
             end
     end.
 
