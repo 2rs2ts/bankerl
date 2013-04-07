@@ -18,7 +18,7 @@ size(Bank) ->
 %% accounts/2
 %% Return the account types associated with a particular owner: {ok, TypeList}
 accounts(Bank, Owner) ->
-    TypeList = [A#account.type || A#account <- Bank, A#account.owner == Owner],
+    TypeList = [#account.type || #account{} <- Bank, #account.owner == Owner],
     {ok, TypeList}.
 
 %% balance/3
@@ -35,8 +35,8 @@ balance(Bank, Owner, Type) ->
 open(Bank, Owner, Type) ->
     case select_account(Bank, Owner, Type) of
         [] ->
-            {ok, [#account(name = Owner, type = Type) | Bank]};
-        {Account} ->
+            {ok, [#account{owner = Owner, type = Type} | Bank]};
+        {_} ->
             {error, "Duplicate account"}
     end.
 
@@ -65,8 +65,8 @@ deposit(Bank, Owner, Type, Amount) ->
         [] ->
             {error, "No such account"};
         {Account} ->
-            DepositFun = fun(A :: #account) when A == Account ->
-                    A#account.balance + Amount end,
+            DepositFun =    fun(A) when A == Account ->
+                                A#account.balance + Amount end,
             {ok, lists:map(DepositFun, Bank)}
     end.
 
@@ -89,9 +89,10 @@ withdraw(Bank, Owner, Type, Amount) ->
             if  Account#account.balance - Amount < 0 ->
                     {error, "Overdrawn"};
                 Account#account.balance - Amount >= 0 ->
-                    DepositFun = fun(A :: #account) when A == Account ->
-                        A#account.balance - Amount end,
+                    DepositFun =    fun(A) when A == Account ->
+                                        A#account.balance - Amount end,
                     {ok, lists:map(DepositFun, Bank)}
+            end
     end.
 
 %% select_account/3
@@ -99,7 +100,5 @@ withdraw(Bank, Owner, Type, Amount) ->
 % Uses lists:filter but because {Owner,Type} is the primary key only one account
 % should ever be returned. Returned in a tuple
 select_account(Bank, Owner, Type) ->
-    Find =  fun(A :: #account) ->
-                A#account.owner == Owner,
-                A#account.type == Type end,
+    Find = fun(A) -> A#account.owner == Owner, A#account.type == Type end,
     lists:filter(Find, Bank).
