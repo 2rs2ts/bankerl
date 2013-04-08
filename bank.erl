@@ -11,13 +11,14 @@
         , type :: atom()
         , balance = 0 :: non_neg_integer()
         }).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 %%  Client-side functions
 %%
+%%  In these functions, Bank is the Pid of the Bank.
+%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 
 %% init/0
 %% Create a new Bank: {ok, Bank} where Bank is the process id of the Bank.
@@ -81,11 +82,19 @@ init() ->
     Bank = spawn(fun() -> BankMain(BankMain, [])),
     {ok, Bank}.
 
-
+%% size/1
+%% Return the number of accounts in the Bank: {ok, Size}
+size(Bank) ->
+    Bank ! {self(), size},
+    receive
+        Any -> Any
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
-%% Server-side functions
+%%  Server-side functions
+%%
+%%  In these functions, Bank is the #account list.
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
