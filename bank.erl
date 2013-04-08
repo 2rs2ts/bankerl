@@ -2,7 +2,7 @@
 %% Andrew Garrett
 -module(bank).
 -export([   size/1, accounts/2, balance/3,
-            open/3, close/3, deposit/4, withdraw/4  ]).
+            init/0, open/3, close/3, deposit/4, withdraw/4  ]).
 
 %% A bank account under the ownership of an owner with owner 'owner', of type
 %% 'type', and a balance 'balance'.
@@ -22,6 +22,23 @@ size(Bank) ->
 accounts(Bank, Owner) ->
     TypeList = [#account.type || #account{} <- Bank, #account.owner == Owner],
     {ok, TypeList}.
+
+%% init/0
+%% Create a new Bank: {ok, Bank} where Bank is the process id of the Bank.
+%% Must be called before any other operation.
+init() ->
+    BankMain = fun(BM) ->
+        receive
+            % {Pid, cmd, Key, Value} -> % Client cmds must pass self() as Pid
+            %   {Status, Result} = operation(Bank, Key, Value),
+            %   case {Status, Result} of
+            %       {error, Reason} -> Pid ! {error, Result}, loop(Bank);
+            %       {ok, NewBank} -> Pid ! {ok}, loop(NewBank)
+            %   end;
+            Any -> io:format("Bank got some message ~p~n", [Any]), BM(BM)
+        end.
+    Bank = spawn(fun() -> BankMain(BankMain)).
+    {ok, Bank}.
 
 %% balance/3
 %% Return the balance in a particular owner's account of a particular type:
