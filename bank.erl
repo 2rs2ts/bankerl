@@ -11,23 +11,19 @@
         , type :: atom()
         , balance = 0 :: non_neg_integer()
         }).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%%  Client-side functions
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% size/1
-%% Return the number of accounts in the Bank: {ok, Size}
-size(Bank) ->
-    {ok, erlang:length(Bank)}.
 
-%% accounts/2
-%% Return the account types associated with a particular owner: {ok, TypeList}
-accounts(Bank, Owner) ->
-    TypeList = [#account.type || #account{} <- Bank, #account.owner == Owner],
-    {ok, TypeList}.
 
 %% init/0
 %% Create a new Bank: {ok, Bank} where Bank is the process id of the Bank.
 %% Must be called before any other operation.
 init() ->
-    BankMain = fun(BM) ->
+    BankMain = fun(BM, Bank) ->
         receive
             % {Pid, cmd, Key, Value} -> % Client cmds must pass self() as Pid
             %   {Status, Result} = operation(Bank, Key, Value),
@@ -35,15 +31,79 @@ init() ->
             %       {error, Reason} -> Pid ! {error, Result}, loop(Bank);
             %       {ok, NewBank} -> Pid ! {ok}, loop(NewBank)
             %   end;
+            {Pid, size} ->
+                Pid ! s_size(Bank),
+                BM(BM, Bank);
+            {Pid, accounts, Owner} ->
+                Pid ! s_accounts(Bank, Owner),
+                BM(BM, Bank);
+            {Pid, balance, Owner, Type} ->
+                Pid ! s_balance(Bank),
+                BM(BM, Bank);
+            {Pid, open, Owner, Type} ->
+                case s_open(Bank, Owner, Type) of
+                    {error, Reason} ->
+                        Pid ! {error, Reason},
+                        BM(BM, Bank);
+                    {ok, NewBank} ->
+                        Pid ! {ok},
+                        BM(BM, NewBank)
+                end;
+            {Pid, close, Owner, Type} ->
+                case s_close(Bank, Owner, Type) of
+                    {error, Reason} ->
+                        Pid ! {error, Reason},
+                        BM(BM, Bank);
+                    {ok, {NewBank, ClosingBalance}} ->
+                        Pid ! {ok, ClosingBalance},
+                        BM(BM, NewBank)
+                end;
+            {Pid, deposit, Owner, Type, Amount) ->
+                case s_deposit(Bank, Owner, Type, Amount) of
+                    {error, Reason} ->
+                        Pid ! {error, Reason},
+                        BM(BM, Bank);
+                    {ok, NewBank} ->
+                        Pid ! {ok},
+                        BM(BM, NewBank)
+                end;
+            {Pid, withdraw, Owner, Type, Amount) ->
+                case s_withdraw(Bank, Owner, Type, Amount) of
+                    {error, Reason} ->
+                        Pid ! {error, Reason},
+                        BM(BM, Bank);
+                    {ok, NewBank} ->
+                        Pid ! {ok},
+                        BM(BM, NewBank)
+                end;
             Any -> io:format("Bank got some message ~p~n", [Any]), BM(BM)
         end.
-    Bank = spawn(fun() -> BankMain(BankMain)).
+    Bank = spawn(fun() -> BankMain(BankMain, [])),
     {ok, Bank}.
 
-%% balance/3
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Server-side functions
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% s_size/1
+%% Return the number of accounts in the Bank: {ok, Size}
+s_size(Bank) ->
+    {ok, erlang:length(Bank)}.
+
+%% s_accounts/2
+%% Return the account types associated with a particular owner: {ok, TypeList}
+s_accounts(Bank, Owner) ->
+    TypeList = [#account.type || #account{} <- Bank, #account.owner == Owner],
+    {ok, TypeList}.
+
+%% s_balance/3
 %% Return the balance in a particular owner's account of a particular type:
 %% {ok, Balance}
-balance(Bank, Owner, Type) ->
+s_balance(Bank, Owner, Type) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {error, "No such account"};
@@ -51,12 +111,12 @@ balance(Bank, Owner, Type) ->
             {ok, Account#account.balance}
     end.
 
-%% open/3
+%% s_open/3
 %% Create a new account of a specified type for a specified owner.
 %% If the owner does not have an account of this type: {ok, NewBank}
 %% If the owner already has an account of this type:
 %% {error, "Duplicate account"}
-open(Bank, Owner, Type) ->
+s_open(Bank, Owner, Type) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {ok, [#account{owner = Owner, type = Type} | Bank]};
@@ -64,11 +124,11 @@ open(Bank, Owner, Type) ->
             {error, "Duplicate account"}
     end.
 
-%% close/3
+%% s_close/3
 %% Close a specified owner's account of a specified type.
 %% If the owner had an account of this type: {ok, {NewBank, ClosingBalance}}
 %% If the owner did not have an account of this type: {error, "No such account"}
-close(Bank, Owner, Type) ->
+s_close(Bank, Owner, Type) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {error, "No such account"};
@@ -76,16 +136,16 @@ close(Bank, Owner, Type) ->
             {ok, {lists:delete(Account, Bank), Account#account.balance}}
     end.
 
-%% deposit/4
+%% s_deposit/4
 %% Deposit a specified amount of funds in a specified owner's account of a
 %% specified type.
 %% If the owner has an account of this type: {ok, NewBank}
 %% If the owner does not have an account of this type:
 %% {error, "No such account"}
 %% If the specified amount is not positive: {error, "Negative amount"}
-deposit(_Bank, _Owner, _Type, Amount) when Amount < 0 ->
+s_deposit(_Bank, _Owner, _Type, Amount) when Amount < 0 ->
 	{error, "Negative amount"};
-deposit(Bank, Owner, Type, Amount) ->
+s_deposit(Bank, Owner, Type, Amount) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {error, "No such account"};
@@ -97,7 +157,7 @@ deposit(Bank, Owner, Type, Amount) ->
             {ok, lists:map(DepositFun, Bank)}
     end.
 
-%% withdraw/4
+%% s_withdraw/4
 %% Withdraw a specified amount of funds from a specified owner's account of a
 %% specified type.
 %% If the owner has an account of this type and there are sufficient funds to
@@ -107,9 +167,9 @@ deposit(Bank, Owner, Type, Amount) ->
 %% If the owner does not have an account of this type:
 %% {error, "No such account"}
 %% If the specified amount is not positive: {error, "Negative amount"}
-withdraw(_Bank, _Owner, _Type, Amount) when Amount < 0 ->
+s_withdraw(_Bank, _Owner, _Type, Amount) when Amount < 0 ->
 	{error, "Negative amount"};
-withdraw(Bank, Owner, Type, Amount) ->
+s_withdraw(Bank, Owner, Type, Amount) ->
     case select_account(Bank, Owner, Type) of
         [] ->
             {error, "No such account"};
