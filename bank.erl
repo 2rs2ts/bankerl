@@ -4,7 +4,7 @@
 
 %% A bank account under the ownership of an owner with name 'name', of type 'type',
 %% and a balance 'balance'.
--record(account, {  name :: atom(),
+-record(account, {  owner :: atom(),
                     type :: atom(),
                     balance = 0 :: non_neg_integer()  }).
 
@@ -17,7 +17,7 @@ size(Bank) -> {ok, erlang:length(Bank)}.
 %% accounts/2
 %% Return the account types associated with a particular owner: {ok, TypeList}
 accounts(Bank, Owner) ->
-	FindType = fun(A) when A#account.name == Owner -> A#account.type end,
+	FindType = fun(A) when A#account.owner == Owner -> A#account.type end,
 	{ok, lists:map(FindType, Bank)}.
 
 %% balance/3
@@ -25,7 +25,7 @@ accounts(Bank, Owner) ->
 %% {ok, Balance}
 % could use lists:keyfind
 balance(Bank, Owner, Type) -> 
-	FindBal = fun(A) when A#account.name == Owner, A#account.type == Type ->
+	FindBal = fun(A) when A#account.owner == Owner, A#account.type == Type ->
 		A#account.balance end,
 	{Balance} = lists:map(FindBal, Bank),
 	{ok, Balance}.
@@ -36,17 +36,17 @@ balance(Bank, Owner, Type) ->
 %% If the owner does not have an account of this type: {ok, NewBank}
 %% If the owner already has an account of this type: {error, "Duplicate account"}
 % need to find both owner and type
-%open(Bank, Owner, Type) when lists:keyfind(Owner, #account.name, Bank) ->
+%open(Bank, Owner, Type) when lists:keyfind(Owner, #account.owner, Bank) ->
 %	{error, "Duplicate account"};
 %open(Bank, Owner, Type) ->
-%	NewAccount = #account(name = Owner, type = Type),
-%	{ok, lists:keystore(Owner, #account.name, Bank, NewAccount}.	
+%	NewAccount = #account(owner = Owner, type = Type),
+%	{ok, lists:keystore(Owner, #account.owner, Bank, NewAccount}.	
 
 open(Bank, Owner, Type) ->
-	Find = fun(A) when A#account.name == Owner, A#account.type == Type -> A end,
+	Find = fun(A) when A#account.owner == Owner, A#account.type == Type -> A end,
 	case lists:any(Find, Bank) of
 		true -> {error, "Duplicate account"};
-		false -> {ok, [#account(name = Owner, type = Type) | Bank]}
+		false -> {ok, [#account(owner = Owner, type = Type) | Bank]}
 	end.
 
 
@@ -55,7 +55,7 @@ open(Bank, Owner, Type) ->
 %% If the owner had an account of this type: {ok, {NewBank, ClosingBalance}}
 %% If the owner did not have an account of this type: {error, "No such account"}
 close(Bank, Owner, Type) ->
-	Find = fun(A) when A#account.name == Owner, A#account.type == Type -> A end,
+	Find = fun(A) when A#account.owner == Owner, A#account.type == Type -> A end,
 	{Account} = lists:map(Find, Bank},
 	lists:delete(Account, Bank).
 
@@ -70,7 +70,7 @@ deposit(_Bank, _Owner, _Type, Amount) when Amount < 0 ->
 	{error, "Negative amount"};
 deposit(Bank, Owner, Type, Amount) ->
 % can't use keystore b/c appending, only nth value
-	Find = fun(A) when A#account.name == Owner, A#account.type == Type -> A end,
+	Find = fun(A) when A#account.owner == Owner, A#account.type == Type -> A end,
 	
 
 
