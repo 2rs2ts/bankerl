@@ -217,6 +217,7 @@ s_close(Bank, Owner, Type) ->
 %% s_deposit/4
 %% Deposit a specified amount of funds in a specified owner's account of a
 %% specified type.
+%% Warning: does not handle non-numeric Amounts (wasn't specified in writeup)
 %% If the owner has an account of this type: {ok, NewBank}
 %% If the owner does not have an account of this type:
 %% {error, "No such account"}
@@ -238,6 +239,7 @@ s_deposit(Bank, Owner, Type, Amount) ->
 %% s_withdraw/4
 %% Withdraw a specified amount of funds from a specified owner's account of a
 %% specified type.
+%% Warning: does not handle non-numeric Amounts (wasn't specified in writeup)
 %% If the owner has an account of this type and there are sufficient funds to
 %% withdraw: {ok, NewBank}
 %% If the owner has an account of this type but there are insufficient funds to
