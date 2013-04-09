@@ -59,7 +59,7 @@ init() ->
                         Pid ! {ok, ClosingBalance},
                         BM(BM, NewBank)
                 end;
-            {Pid, deposit, Owner, Type, Amount) ->
+            {Pid, deposit, Owner, Type, Amount} ->
                 case s_deposit(Bank, Owner, Type, Amount) of
                     {error, Reason} ->
                         Pid ! {error, Reason},
@@ -68,7 +68,7 @@ init() ->
                         Pid ! {ok},
                         BM(BM, NewBank)
                 end;
-            {Pid, withdraw, Owner, Type, Amount) ->
+            {Pid, withdraw, Owner, Type, Amount} ->
                 case s_withdraw(Bank, Owner, Type, Amount) of
                     {error, Reason} ->
                         Pid ! {error, Reason},
@@ -78,8 +78,8 @@ init() ->
                         BM(BM, NewBank)
                 end;
             Any -> io:format("Bank got some message ~p~n", [Any]), BM(BM)
-        end.
-    Bank = spawn(fun() -> BankMain(BankMain, [])),
+        end,
+    Bank = spawn(fun() -> BankMain(BankMain, []) end.),
     {ok, Bank}.
 
 %% size/1
@@ -93,7 +93,7 @@ size(Bank) ->
 %% accounts/2
 %% Return the account types associated with a particular owner: {ok, TypeList}
 accounts(Bank, Owner) ->
-    Bank ! (self(), accounts, Owner),
+    Bank ! {self(), accounts, Owner},
     receive
         Any -> Any
     end.
@@ -102,7 +102,7 @@ accounts(Bank, Owner) ->
 %% Return the balance in a particular owner's account of a particular type:
 %% {ok, Balance}
 balance(Bank, Owner, Type) ->
-    Bank ! (self(), balance, Owner, Type),
+    Bank ! {self(), balance, Owner, Type},
     receive
         Any -> Any
     end.
@@ -113,7 +113,7 @@ balance(Bank, Owner, Type) ->
 %% If the owner already has an account of this type:
 %% {error, "Duplicate account"}
 open(Bank, Owner, Type) ->
-    Bank ! (self(), open, Owner, Type),
+    Bank ! {self(), open, Owner, Type},
     receive
         Any -> Any
     end.
@@ -123,7 +123,7 @@ open(Bank, Owner, Type) ->
 %% If the owner had an account of this type: {ok, ClosingBalance}
 %% If the owner did not have an account of this type: {error, "No such account"}
 close(Bank, Owner, Type) ->
-    Bank ! (self(), close, Owner, Type),
+    Bank ! {self(), close, Owner, Type},
     receive
         Any -> Any
     end.
@@ -136,7 +136,7 @@ close(Bank, Owner, Type) ->
 %% {error, "No such account"}
 %% If the specified amount is not positive: {error, "Negative amount"}
 deposit(Bank, Owner, Type, Amount) ->
-    Bank ! (self(), deposit, Owner, Type, Amount),
+    Bank ! {self(), deposit, Owner, Type, Amount},
     receive
         Any -> Any
     end.
@@ -152,7 +152,7 @@ deposit(Bank, Owner, Type, Amount) ->
 %% {error, "No such account"}
 %% If the specified amount is not positive: {error, "Negative amount"}
 withdraw(Bank, Owner, Type, Amount) ->
-    Bank ! (self(), withdraw, Owner, Type, Amount),
+    Bank ! {self(), withdraw, Owner, Type, Amount},
     receive
         Any -> Any
     end.
