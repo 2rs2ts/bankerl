@@ -90,6 +90,73 @@ size(Bank) ->
         Any -> Any
     end.
 
+%% accounts/2
+%% Return the account types associated with a particular owner: {ok, TypeList}
+accounts(Bank, Owner) ->
+    Bank ! (self(), accounts, Owner),
+    receive
+        Any -> Any
+    end.
+
+%% balance/3
+%% Return the balance in a particular owner's account of a particular type:
+%% {ok, Balance}
+balance(Bank, Owner, Type) ->
+    Bank ! (self(), balance, Owner, Type),
+    receive
+        Any -> Any
+    end.
+
+%% open/3
+%% Create a new account of a specified type for a specified owner.
+%% If the owner does not have an account of this type: {ok}
+%% If the owner already has an account of this type:
+%% {error, "Duplicate account"}
+open(Bank, Owner, Type) ->
+    Bank ! (self(), open, Owner, Type),
+    receive
+        Any -> Any
+    end.
+
+%% close/3
+%% Close a specified owner's account of a specified type.
+%% If the owner had an account of this type: {ok, ClosingBalance}
+%% If the owner did not have an account of this type: {error, "No such account"}
+close(Bank, Owner, Type) ->
+    Bank ! (self(), close, Owner, Type),
+    receive
+        Any -> Any
+    end.
+
+%% deposit/4
+%% Deposit a specified amount of funds in a specified owner's account of a
+%% specified type.
+%% If the owner has an account of this type: {ok}
+%% If the owner does not have an account of this type:
+%% {error, "No such account"}
+%% If the specified amount is not positive: {error, "Negative amount"}
+deposit(Bank, Owner, Type, Amount) ->
+    Bank ! (self(), deposit, Owner, Type, Amount),
+    receive
+        Any -> Any
+    end.
+
+%% withdraw/4
+%% Withdraw a specified amount of funds from a specified owner's account of a
+%% specified type.
+%% If the owner has an account of this type and there are sufficient funds to
+%% withdraw: {ok}
+%% If the owner has an account of this type but there are insufficient funds to
+%% withdraw: {error, "Overdrawn"}
+%% If the owner does not have an account of this type:
+%% {error, "No such account"}
+%% If the specified amount is not positive: {error, "Negative amount"}
+withdraw(Bank, Owner, Type, Amount) ->
+    Bank ! (self(), withdraw, Owner, Type, Amount),
+    receive
+        Any -> Any
+    end.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 %%  Server-side functions
