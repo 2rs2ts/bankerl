@@ -174,7 +174,7 @@ s_size(Bank) ->
 %% s_accounts/2
 %% Return the account types associated with a particular owner: {ok, TypeList}
 s_accounts(Bank, Owner) ->
-    TypeList = [#account.type || #account{} <- Bank, #account.owner == Owner],
+    TypeList = [A#account.type || A <- Bank, A#account.owner == Owner],
     {ok, TypeList}.
 
 %% s_balance/3
