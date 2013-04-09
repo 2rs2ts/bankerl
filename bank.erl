@@ -76,8 +76,7 @@ init() ->
                     {ok, NewBank} ->
                         Pid ! {ok},
                         BM(BM, NewBank)
-                end;
-            Any -> io:format("Bank got some message ~p~n", [Any]), BM(BM, Bank)
+                end
         end
     end,
     Bank = spawn(fun() -> BankMain(BankMain, []) end),
