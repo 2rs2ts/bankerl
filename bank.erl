@@ -1,8 +1,10 @@
 %% A banking module which stores accounts and can perform transactions.
 %% Andrew Garrett
 -module(bank).
--export([   size/1, accounts/2, balance/3,
-            init/0, open/3, close/3, deposit/4, withdraw/4  ]).
+-export([   init/0,                                 % Initialization
+            size/1, accounts/2, balance/3,          % Queries
+            open/3, close/3, deposit/4, withdraw/4  % Operations
+        ]).
 
 %% A bank account under the ownership of an owner with owner 'owner', of type
 %% 'type', and a balance 'balance'.
@@ -268,5 +270,6 @@ s_withdraw(Bank, Owner, Type, Amount) ->
 %% anonymous variable. Result returned in a tuple to help pattern matching.
 select_account(Bank, Owner, Type) ->
     Find =  fun(A) ->
-                (A#account.owner == Owner) andalso (A#account.type == Type) end,
+        (A#account.owner == Owner) andalso (A#account.type == Type)
+        end,
     lists:filter(Find, Bank).
