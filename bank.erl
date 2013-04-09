@@ -39,7 +39,7 @@ init() ->
                 Pid ! s_accounts(Bank, Owner),
                 BM(BM, Bank);
             {Pid, balance, Owner, Type} ->
-                Pid ! s_balance(Bank),
+                Pid ! s_balance(Bank, Owner, Type),
                 BM(BM, Bank);
             {Pid, open, Owner, Type} ->
                 case s_open(Bank, Owner, Type) of
@@ -77,9 +77,10 @@ init() ->
                         Pid ! {ok},
                         BM(BM, NewBank)
                 end;
-            Any -> io:format("Bank got some message ~p~n", [Any]), BM(BM)
-        end,
-    Bank = spawn(fun() -> BankMain(BankMain, []) end.),
+            Any -> io:format("Bank got some message ~p~n", [Any]), BM(BM, Bank)
+        end
+    end,
+    Bank = spawn(fun() -> BankMain(BankMain, []) end),
     {ok, Bank}.
 
 %% size/1
